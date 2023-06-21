@@ -1,0 +1,22 @@
+# Build results
+/target
+
+
+# Cargo+Git helper file (https://github.com/rust-lang/cargo/blob/0.44.1/src/cargo/sources/git/utils.rs#L320-L327)
+.cargo-ok
+
+# Text file backups
+**/*.rs.bk
+
+# macOS
+.DS_Store
+
+# IDEs
+*.iml
+.idea
+
+# client 
+/client/node_modules
+
+/client/.env
+contracts/pools/secret_network/native/manual_claim/ng.wat
