@@ -1,26 +1,31 @@
-# Change Log
+# Migrating a CosmWasm Contract to Secret Network
 
 In this tutorial we'll teach you step by step process to migrate a cosmwasm contract to secret network.
 
+## Step 1: 
+
 Copy the `cw-counter` folder and rename it `secret-counter`.
 
-## Cargo.toml
+
+## Step 2: Update `Cargo.toml`
 
 This document outlines changes made to contract dependencies in `Cargo.toml`.
 
-- Change the name package name in Cargo.toml
+### 1. Change the name package name in Cargo.toml
 
 ```toml
 name = "cw-counter"
+..
 ```
 
-With:
+Replace With:
 
 ```toml
 name = "secret-counter"
+..
 ```
 
-- Change the contract name in /bin/schema.rs
+### 2. Change the contract name in /bin/schema.rs
 
 ```Rust
 use cw_counter::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -32,35 +37,55 @@ With:
 use secret_counter::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 ```
 
-Run
+### 3. Build and run tests
+
+After these changes, build and test the project to check for any errors:
 
 ```Rust
 cargo build
 cargo test
 ```
-
-to check for any errors
+That's it for the Cargo.toml modifications. Proceeding with these changes should get your Secret Network contract off to a solid start.
 
 ## Multi-Tests
 
-- Secret Network does not officially support multi-tests. Consequently, it is recommended to remove the `integration_tests.rs` file from your project.
+When working with Secret Network, it's crucial to understand that official support for multi-tests is not provided. As a result, it's advisable to exclude the `integration_tests.rs` file from your project. To implement this, you'll need to: 
 
-- Remove the following lines from your `Cargo.toml` file:
+### 1. remove specific lines from your `Cargo.toml` file:
 
 ```toml
 [dev-dependencies]
 cw-multi-test = "0.15.1"
 ```
 
-- There are some other teams that have worked with multi-test. [This](https://github.com/securesecrets/secret-plus-utils) package by secure secrets can be an alternative to
-  secret networks storage package
-  aka secret-toolkit. But it's recommended to use secret-toolkit for advanced storage packages.
+### 2. Remove/Delete `integration_tests.rs` file
 
-## CosmWasm Dependencies
+Next it's best to remove `integration_tests.rs` because as I mentioned before secret network doesn't supports multi-tests.
 
-- Replace the existing dependencies `cosmwasm-schema`, `cosmwasm-std`, and `cosmwasm-storage` with the Secret Network versions.
 
-- Remove the following lines from your `Cargo.toml` file:
+### 3. Remove this line from `lib.rs` as well
+
+```Rust
+pub mod integration_tests;
+```
+
+### 4. Remove/Delete `helpers.rs` file
+
+Since in this example `helper.rs` are only used in `integration_tests.rs`
+
+### 5. Remove this line from `lib.rs` as well
+
+```Rust
+pub mod helpers;
+```
+
+NOTE: There are some other teams that have worked with multi-test. [This](https://github.com/securesecrets/secret-plus-utils) package by secure secrets can be an alternative to secret networks storage package aka secret-toolkit. But it's recommended to use secret-toolkit for advanced storage packages.
+
+## Updating CosmWasm Dependencies
+
+When working with Secret Network, it's necessary to replace certain existing CosmWasm dependencies such as `cosmwasm-schema`, `cosmwasm-std`, and `cosmwasm-storage`. The Secret Network has its own versions of these packages.
+
+Start by removing the following lines from your `Cargo.toml` file:
 
 ```toml
 [dependencies]
@@ -69,7 +94,7 @@ cosmwasm-std = "1.1.3"
 cosmwasm-storage = "1.1.3"
 ```
 
-and replace the line with
+Replace with:
 
 ```toml
 cosmwasm-schema = { version = "1.1.8" }
@@ -81,33 +106,13 @@ secret-toolkit = { git = "https://github.com/scrtlabs/secret-toolkit", features 
 ], rev = "9b74bdac71c2fedcc12246f18cdfdd94b8991282" }
 ```
 
-- Secret Network has it's own version of cosmwasm and hence we need to change the dependencies
+After making these changes to your dependencies, you may encounter errors in files such as `contract.rs`, `helpers.rs`, and `state.rs`. This is normal due to the different requirements of Secret Network's versions of the CosmWasm packages.
 
-### TODO add more explaination to this contract
+## Updating State.rs
 
-Now you'll be seeing some errors in `contract.rs`, `helpers.rs`, `integrations.rs` and `state.rs`
+Some standard dependencies need to be swapped with alternatives provided by `secret_toolkit`. The below instructions detail how to make these replacements in the `state.rs` file.
 
-- 1. First it's best to remove `integration_tests.rs` because as I mentioned before secret network doesn't supports multi-tests.
-
-## lib.rs
-
-Remove this line from `lib.rs` as well
-
-```Rust
-pub mod integration_tests;
-```
-
-- 2. Remove `helpers.rs` since in this example `helper.rs` are only used in `integration_tests.rs`
-
-Remove this line from `lib.rs` as well
-
-```Rust
-pub mod helpers;
-```
-
-## State.rs
-
-- 2. Replace the
+### 1. Replace `cw_storage_plus` Dependencies with `secret-toolkit`
 
 ```Rust
 use cw_storage_plus::{Item, Map};
@@ -119,9 +124,11 @@ With:
 use secret_toolkit::storage::{Item,Keymap};
 ```
 
-secret_toolkit is secret networks's the alternative to cw_storage_plus. The storage packages have same concepts but have different names and flexability.
+The secret_toolkit is Secret Network's alternative to cw_storage_plus. While they both handle storage packages, they have different names and offer different levels of flexibility.
 
-- 3 Now edit the STATE, Item key needs to be changed as well because secret toolkit required byte string literal instead of string literal for the key:
+### 2. Edit the STATE Item Key
+
+The Item key needs to be changed because secret_toolkit requires a byte string literal instead of a string literal for the key.
 
 ```Rust
 pub const STATE: Item<State> = Item::new("state");
@@ -133,7 +140,9 @@ Replace with:
 pub const STATE: Item<State> = Item::new(b"state");
 ```
 
-- 4 Same edit USER_STATE, Map is more or less similar to KeyMap in secret-toolkit. Map key needs to be changed as well because secret toolkit required byte string literal instead of string literal for the key
+### 3. Edit the USER_STATE Item Key
+
+The Map in cw_storage_plus is more or less similar to Keymap in secret_toolkit. Map key also needs to be changed as well because secret toolkit required byte string literal instead of string literal for the key
 
 ```Rust
 pub const STATE: Map<Addr, UserState> = Map::new("user_state");
@@ -145,35 +154,38 @@ Replace with:
 pub const USER_STATE: Keymap<Addr, UserState> = Keymap::new(b"user_state");
 ```
 
-Looks like all the errors in `state.rs` are resolved.
+With these changes, all errors in state.rs should be resolved.
 
 ## contract.rs
 
-You might be seeing alot of error but these errors. Let's disect each error one by one.
+The `contract.rs` file might be presenting a lot of errors. Don't panic; we'll dissect and resolve each error step by step.
 
-1. `use cw2::set_contract_version;`.
+### 1. Handling `cw2::set_contract_version`
 
-Secret Network doesn't have a cw2 alternative so we'll have to delete
+Secret Network doesn't have an alternative for `cw2`, so the related lines have to be removed:
 
 ```rust
 use cw2::set_contract_version;
+
+//...
+
+pub fn instantiate(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    msg: InstantiateMsg,
+) -> Result<Response, ContractError> {
+//...
+set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+//...
+}
 ```
 
-and
+The cw2 module is used to set the contract version, which is crucial for migrations. At present, we don't have a strategy for handling contract migrations on Secret Network compared to other networks. Read more about migration from [secret network docs](https://docs.scrt.network/secret-network-documentation/development/development-concepts/contract-migration).
 
-```rust
-    set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
-```
+### 2. Updating increment function
 
-CW2 is used set the contract version, this is needed for migrations
-
-//TODO: how to do contract migration on secret compared to other networks
-
-### increment function()
-
-As mentioned before Items/Maps on CW are different in terms on helper functions
-
-Try changing the increment function yourself first.
+As we've already mentioned, Item/Map from CosmWasm are slightly different in terms of their helper functions compared to Secret Network. Here's the Secret Network version of the increment function.
 
 This is the migrated version of the contract:
 
@@ -195,11 +207,11 @@ This is the migrated version of the contract:
     }
 ```
 
-As you can see that we replaced `Map` with `KeyMap`. KeyMap uses `get` and `insert` instead of `load` and `save`.
+In this version, Map is replaced with KeyMap, which uses get and insert instead of load and save.
 
-Now using this try to change the user_count query yourself.
+Now, try to modify the user_count query **YOURSELF** based on these changes.
 
-Migrated solution:
+Ok let's check the migrated solution:
 
 ```Rust
     pub fn user_count(deps: Deps, addr: Addr) -> StdResult<GetUserCountResponse> {
@@ -214,7 +226,7 @@ Migrated solution:
 
 Now run the test with `cargo test` on the `secret-counter`. It should pass without an issues.
 
-## Adding User Authentication:
+## Adding User Authentication
 
 Secret contracts provide computational privacy. Permissioned viewing is entirely unique to Secret Network with its encrypted state. It gives you ability to have precise control over who has access to what data. In order to determine when data is allowed to be released however, you need to have a way to prove who is trying to access it. Our two ways of doing this are through Viewing Keys and Permits/Certs.
 
@@ -222,7 +234,9 @@ If you want to learn more about viewing keys and permits. And how they are imple
 
 For this contract we'll restrict access to `QueryMsg::GetUserCount` and leaving global `QueryMsg::GetCount {}` open to the public.
 
-### Adding Viewing keys:
+There are two steps to adding authenticatio. First we'll add viewing keys and then Query Permits.
+
+### 1. **Adding Viewing keys**
 
 Viewing keys can be compared to passwords. When performing an authenticated query using viewing keys, you need to provide a public address and its associated viewing key. This process is similar to authenticating your username (public address) and password (viewing key). For more details and explaination please check [implementing Viewing Keys](https://scrt.university/pathways/33/implementing-viewing-keys-and-permits).
 
@@ -237,17 +251,15 @@ secret-toolkit = { git = "https://github.com/scrtlabs/secret-toolkit", features 
 
 With `viewing-key` package the implementation process of viewing keys is streamlined.
 
-#### Defining the messages.
+#### **Defining the messages**
 
 In your message type definitions (typically in the msg.rs file), you need to make the following additions:
 
-add execute function message to create viewing keys
+1. Add execute function message to create viewing keys
+2. Create viewing key query interface
+3. Implement get_validation_params method (recommended but not strictly necessary)
 
-create viewing key query interface
-
-implement get_validation_params method (recommended but not strictly necessary)
-
-##### Add execute function message to create viewing keys (`msg.rs`)
+**1. Add execute function message to create viewing keys (`msg.rs`)**
 
 ```Rust
 pub enum ExecuteMsg {
@@ -259,7 +271,7 @@ pub enum ExecuteMsg {
 
 CreateViewingKey and SetViewingKey are two types of messages. CreateViewingKey generates a random viewing key and associates it with the user's address, while SetViewingKey allows the user to set a specific key of their choice. Although SetViewingKey provides more user control, it risks weak key selection. From an end user's perspective, the two operations may appear identical.
 
-##### Create viewing key query interface (`msg.rs`)
+**2. Create viewing key query interface (`msg.rs`)**
 
 The contract initiator supplies a prng_seed for the random number generator. This seed, accessible only by the contract, is used in the creation of viewing keys.
 Add `prng_seed` to the `InstantiateMsg`.
@@ -301,7 +313,7 @@ pub struct GetUserCountResponse {
 
 ```
 
-##### Implement get_validation_params method (`msg.rs`)
+**3. Implement get_validation_params method (`msg.rs`)**
 
 We're implementing helper functions to confirm the viewing key for a provided user address.
 
@@ -328,7 +340,7 @@ impl QueryMsg {
 
 We also check the validity of the address by using the api.addr_validate method. If the address is valid, the function returns a tuple containing the validated address and the viewing key.
 
-### Contract.rs
+#### **Updating Contract.rs**
 
 The following steps need to be taken for the main body of the contract (typically in contract.rs):
 
@@ -342,7 +354,7 @@ The following steps need to be taken for the main body of the contract (typicall
 
 5. create functions to handle the queries (as you would with any query)
 
-#### import vk toolkit, sha256 and ExecuteAnswer:
+##### **import vk toolkit, sha256 and ExecuteAnswer**
 
 ```Rust
 use secret_toolkit::viewing_key::{ViewingKey, ViewingKeyStore};
@@ -351,7 +363,7 @@ use crate::msg::{ExecuteAnswer, ...};
 
 ```
 
-#### `Set Seed for CreateViewingKeys`
+##### Set Seed for `CreateViewingKeys`
 
 ```Rust
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -370,7 +382,7 @@ pub fn instantiate(
 }
 ```
 
-#### Execute function(s) to create viewing keys
+##### Execute function(s) to create viewing keys
 
 We're allowing Execute function to handle set and create viewing key functions:
 
@@ -425,7 +437,7 @@ As you might remember that we used `ViewingKey::set_seed` to set the prng_seed. 
 
 The ViewingKey struct provides the create associated function that handles the random number generation internally. The function saves the viewing key in the contract storage, associating it with the sender's public address.
 
-#### Query entry point to handle vk queries
+##### Query entry point to handle vk queries
 
 Create a function that only handles the viewing key queries:
 
@@ -495,6 +507,8 @@ It means that any Query Message that doesn't match any other message are directe
 
 ```
 
+##### Modifying Unit-test
+
 Viewing key is added and now it's time to modify the unit tests to check the results. We'll change increment test. Read though the test to understand. Remember to import all the packages needed for unit-test.
 
 ```Rust
@@ -551,15 +565,15 @@ Viewing key is added and now it's time to modify the unit tests to check the res
 
 Now run `cargo test` to check the final results
 
-## Query Permits
+### 2. Adding Query Permits
 
 You can learn more about query permits over here and now it's time to implement those:
 
-### Define the messages
+#### Define the messages
 
 First, we need to define the query messages that require permits within the QueryMsg enum. Typically, all permit queries are grouped under a single variant, while the individual permit queries are defined in a separate enum
 
-#### msg.rs
+##### msg.rs
 
 Importing Permit from secret-toolkit
 
@@ -604,7 +618,7 @@ See that GetUserCount doesn't requires any `addr` or `key` because permit provid
 
 In code above we create an custom permissions enum, just for this contract. Permits allow custom Permissions other than the Permssions that Snip-20 and Snip-721 uses. Add an enum that is used by the user to give permissions to only specific queries. `Owner` permission allows to access all queries while `UserCount` permission only allows `user_count` query.
 
-#### contract.rs
+#### Updating contract.rs
 
 In the main body of the contract (typically in contract.rs), the following steps need to be taken:
 
@@ -616,7 +630,7 @@ In the main body of the contract (typically in contract.rs), the following steps
 
 4. add revoke permits execute function
 
-#### Import permit package from Secret Toolkit
+##### Import permit package from Secret Toolkit
 
 ```Rust
 
@@ -631,7 +645,7 @@ use secret_toolkit::{
 
 The permit package offers Permit and RevokedPermits structures and a TokenPermissions enum for default permissions. Developers can use these defaults or create custom permissions.
 
-#### add message variants to the query entry point enum
+##### add message variants to the query entry point enum
 
 Adding the necessary message variants to the QueryMsg enum in the query entry point of the contract.
 
@@ -652,7 +666,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 }
 ```
 
-#### Write code to check permit validity and handle the result
+##### Write code to check permit validity and handle the result
 
 In this step, we write code to handle permit queries within the permit_queries function.
 
@@ -698,6 +712,8 @@ Now `permit_queries`
         }
     }
 ```
+
+##### Adding Unit-tests
 
 Now we're at a tricky part, to create a permit and test the permit as well. We'll be using [cryptoclerk.xyz](cryptoclerk.xyz) you can navigate to `'Permit Wizard/Permit Generator`. Here you can input your Permit Name, contract address and permission and sign it using your keplr wallet.
 
