@@ -68,7 +68,7 @@ pub mod execute {
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetCount {} => to_binary(&query::count(deps)?),
-        QueryMsg::GetUserCount { user } => to_binary(&query::user_count(deps, user)?),
+        QueryMsg::GetUserCount { addr } => to_binary(&query::user_count(deps, addr)?),
     }
 }
 
@@ -84,8 +84,8 @@ pub mod query {
         Ok(GetCountResponse { count: state.count })
     }
 
-    pub fn user_count(deps: Deps, user: Addr) -> StdResult<GetUserCountResponse> {
-        let user_state = USER_STATE.load(deps.storage, user)?;
+    pub fn user_count(deps: Deps, addr: Addr) -> StdResult<GetUserCountResponse> {
+        let user_state = USER_STATE.load(deps.storage, addr)?;
         Ok(GetUserCountResponse {
             count: user_state.count,
         })
@@ -139,7 +139,7 @@ mod tests {
         let res = query(
             deps.as_ref(),
             mock_env(),
-            QueryMsg::GetUserCount { user: info.sender },
+            QueryMsg::GetUserCount { addr: info.sender },
         )
         .unwrap();
         let value: GetUserCountResponse = from_binary(&res).unwrap();

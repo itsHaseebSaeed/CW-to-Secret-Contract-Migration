@@ -18,7 +18,7 @@ pub enum QueryMsg {
     #[returns(GetCountResponse)]
     GetCount {},
     #[returns(GetUserCountResponse)]
-    GetUserCount { user: Addr },
+    GetUserCount { addr: Addr },
 }
 
 // We define a custom struct for each query response
