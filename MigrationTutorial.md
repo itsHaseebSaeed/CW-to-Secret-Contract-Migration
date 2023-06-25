@@ -6,6 +6,39 @@ In this tutorial we'll teach you step by step process to migrate a cosmwasm cont
 
 Copy the `cw-counter` folder and rename it `secret-counter`.
 
+## Multi-Tests
+
+When working with Secret Network, it's crucial to understand that official support for multi-tests is not provided. As a result, it's advisable to exclude the `integration_tests.rs` file from your project. To implement this, you'll need to: 
+
+### 1. remove specific lines from your `Cargo.toml` file:
+
+```toml
+[dev-dependencies]
+cw-multi-test = "0.15.1"
+```
+
+### 2. Remove/Delete `integration_tests.rs` file
+
+Next it's best to remove `integration_tests.rs` because as I mentioned before secret network doesn't supports multi-tests.
+
+
+### 3. Remove this line from `lib.rs` as well
+
+```Rust
+pub mod integration_tests;
+```
+
+### 4. Remove/Delete `helpers.rs` file
+
+Since in this example `helper.rs` are only used in `integration_tests.rs`
+
+### 5. Remove this line from `lib.rs` as well
+
+```Rust
+pub mod helpers;
+```
+
+NOTE: There are some other teams that have worked with multi-test. [This](https://github.com/securesecrets/secret-plus-utils) package by secure secrets can be an alternative to secret networks storage package aka secret-toolkit. But it's recommended to use secret-toolkit for advanced storage packages.
 
 ## Step 2: Update `Cargo.toml`
 
@@ -46,40 +79,6 @@ cargo build
 cargo test
 ```
 That's it for the Cargo.toml modifications. Proceeding with these changes should get your Secret Network contract off to a solid start.
-
-## Multi-Tests
-
-When working with Secret Network, it's crucial to understand that official support for multi-tests is not provided. As a result, it's advisable to exclude the `integration_tests.rs` file from your project. To implement this, you'll need to: 
-
-### 1. remove specific lines from your `Cargo.toml` file:
-
-```toml
-[dev-dependencies]
-cw-multi-test = "0.15.1"
-```
-
-### 2. Remove/Delete `integration_tests.rs` file
-
-Next it's best to remove `integration_tests.rs` because as I mentioned before secret network doesn't supports multi-tests.
-
-
-### 3. Remove this line from `lib.rs` as well
-
-```Rust
-pub mod integration_tests;
-```
-
-### 4. Remove/Delete `helpers.rs` file
-
-Since in this example `helper.rs` are only used in `integration_tests.rs`
-
-### 5. Remove this line from `lib.rs` as well
-
-```Rust
-pub mod helpers;
-```
-
-NOTE: There are some other teams that have worked with multi-test. [This](https://github.com/securesecrets/secret-plus-utils) package by secure secrets can be an alternative to secret networks storage package aka secret-toolkit. But it's recommended to use secret-toolkit for advanced storage packages.
 
 ## Updating CosmWasm Dependencies
 

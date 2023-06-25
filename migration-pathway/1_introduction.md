@@ -14,6 +14,6 @@ Welcome to the pathway on migrating Cosmwasm contracts to Secret Network contrac
 
 Here are the URLs to these repositories:
 
-Template contract: https://github.com/InjectiveLabs/cw-counter
+Template contract: <https://github.com/InjectiveLabs/cw-counter>
 
-Complete contract: https://github.com/itsHaseebSaeed/CW-to-Secret-Contract-Migration
+Complete contract: <https://github.com/itsHaseebSaeed/CW-to-Secret-Contract-Migration>
