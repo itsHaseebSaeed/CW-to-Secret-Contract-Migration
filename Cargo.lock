@@ -728,7 +728,6 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std 1.1.9",
  "cosmwasm-storage 1.1.9",
- "cw2",
  "schemars",
  "secret-toolkit",
  "serde",
