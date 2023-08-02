@@ -1,6 +1,6 @@
 # Adding Query Permits
 
-You can learn more about query permits over here and now it's time to implement those:
+You can learn more about query permits over [here](https://docs.scrt.network/secret-network-documentation/development/development-concepts/permissioned-viewing/certs-viewing-permits) and now it's time to implement those:
 
 ## Define the messages
 
